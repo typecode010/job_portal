@@ -1,0 +1,76 @@
+{% extends 'base.html' %}
+
+{% block title %}My Conversations | Alumni Job Portal{% endblock %}
+
+{% block content %}
+<section class="py-5">
+    <div class="container">
+        <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-4">
+            <div>
+                <h1 class="h4 fw-bold mb-1">My Conversations</h1>
+                <p class="text-muted mb-0">Conversations between applicants and job owners.</p>
+            </div>
+            <a href="{% url 'dashboard:home' %}" class="btn btn-outline-secondary">Back to Dashboard</a>
+        </div>
+
+        {% if conversation_rows %}
+        <div class="table-responsive">
+            <table class="table table-striped align-middle">
+                <thead>
+                    <tr>
+                        <th>Job</th>
+                        <th>Application</th>
+                        <th>Counterpart</th>
+                        <th>Unread</th>
+                        <th>Last Activity</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for row in conversation_rows %}
+                    <tr>
+                        <td>
+                            <p class="mb-1 fw-semibold">{{ row.thread.application.job.title }}</p>
+                            <p class="mb-0 small text-muted">{{ row.thread.application.job.company_name }}</p>
+                        </td>
+                        <td>
+                            <span class="badge text-bg-secondary">{{ row.thread.application.get_status_display }}</span>
+                            <p class="mb-0 small text-muted mt-1">Applied by {{ row.thread.application.applicant.username }}</p>
+                        </td>
+                        <td>
+                            {% if row.counterpart %}
+                            {{ row.counterpart.get_full_name|default:row.counterpart.username }}
+                            {% else %}
+                            <span class="text-muted">N/A</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if row.unread_count %}
+                            <span class="badge text-bg-danger">{{ row.unread_count }}</span>
+                            {% else %}
+                            <span class="badge text-bg-success">0</span>
+                            {% endif %}
+                        </td>
+                        <td>{{ row.thread.updated_at|date:'d M Y, h:i A' }}</td>
+                        <td>
+                            <a href="{% url 'messaging:thread_detail' row.thread.id %}" class="btn btn-sm btn-primary">Open</a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="card border-0 shadow-sm">
+            <div class="card-body p-4">
+                {% if is_admin_view %}
+                <p class="mb-0 text-muted">No conversations found.</p>
+                {% else %}
+                <p class="mb-0 text-muted">No conversations yet. Open one from your application list.</p>
+                {% endif %}
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</section>
+{% endblock %}

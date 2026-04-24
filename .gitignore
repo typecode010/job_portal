@@ -1,0 +1,10 @@
+# User-requested exclusions
+db.sqlite3
+Projectfile.txt
+projectfile.txt
+readme.md
+
+# Local environment artifacts
+.venv/
+__pycache__/
+*.py[cod]

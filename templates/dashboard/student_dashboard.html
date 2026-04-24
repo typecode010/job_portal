@@ -1,0 +1,310 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Student Dashboard | Alumni Job Portal{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/dashboard.css' %}">
+{% endblock %}
+
+{% block content %}
+<section class="dashboard-page py-5">
+    <div class="container">
+        <div class="dashboard-header mb-4">
+            <h1 class="h3 fw-bold mb-2">Student Dashboard</h1>
+            <p class="mb-0 text-muted">Welcome, {{ request.user.first_name|default:request.user.username }}. Track your progress, matches, and applications from one place.</p>
+        </div>
+
+        <div class="row g-4 mb-4">
+            <div class="col-md-6 col-lg-2">
+                <div class="metric-card">
+                    <h2 class="h6 mb-2">Applications</h2>
+                    <p class="metric-value">{{ applications_count }}</p>
+                    <small class="text-muted">Submitted so far</small>
+                </div>
+            </div>
+            <div class="col-md-6 col-lg-2">
+                <div class="metric-card">
+                    <h2 class="h6 mb-2">Shortlisted</h2>
+                    <p class="metric-value">{{ shortlisted_count }}</p>
+                    <small class="text-muted">In progress</small>
+                </div>
+            </div>
+            <div class="col-md-6 col-lg-2">
+                <div class="metric-card">
+                    <h2 class="h6 mb-2">Selected</h2>
+                    <p class="metric-value">{{ selected_count }}</p>
+                    <small class="text-muted">Successful outcomes</small>
+                </div>
+            </div>
+            <div class="col-md-6 col-lg-2">
+                <div class="metric-card">
+                    <h2 class="h6 mb-2">Bookmarked Jobs</h2>
+                    <p class="metric-value">{{ bookmarks_count }}</p>
+                    <small class="text-muted">Saved for later</small>
+                </div>
+            </div>
+            <div class="col-md-6 col-lg-2">
+                <div class="metric-card">
+                    <h2 class="h6 mb-2">Profile Completion</h2>
+                    <p class="metric-value">{{ profile_completion }}%</p>
+                    <small class="text-muted">Add details to improve matching</small>
+                </div>
+            </div>
+            <div class="col-md-6 col-lg-2">
+                <div class="metric-card">
+                    <h2 class="h6 mb-2">New Matches</h2>
+                    <p class="metric-value">{{ new_matches_count }}</p>
+                    <small class="text-muted">Based on skills and profile</small>
+                </div>
+            </div>
+        </div>
+
+        <div class="row g-4">
+            <div class="col-lg-8">
+                <div class="panel-card">
+                    <h2 class="h5 mb-3">Quick Actions</h2>
+                    <div class="d-flex flex-wrap gap-2">
+                        <a href="{% url 'jobs:list' %}" class="btn btn-primary">Browse Jobs</a>
+                        <a href="{% url 'jobs:bookmarks' %}" class="btn btn-outline-primary">Saved Jobs</a>
+                        <a href="{% url 'notifications:center' %}" class="btn btn-outline-primary">Notifications</a>
+                        <a href="{% url 'reports:feedback' %}" class="btn btn-outline-primary">Report Issue</a>
+                        <a href="{% url 'profiles:profile' %}" class="btn btn-outline-primary">Complete Profile</a>
+                        <a href="{% url 'profiles:resume_upload' %}" class="btn btn-outline-primary">Upload Resume</a>
+                        <a href="{% url 'applications:my_applications' %}" class="btn btn-outline-primary">View Applications</a>
+                    </div>
+                </div>
+
+                <div class="panel-card mt-4">
+                    <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+                        <h2 class="h5 mb-0">Job Search With Filters</h2>
+                        <a href="{% url 'jobs:list' %}" class="btn btn-sm btn-outline-secondary">Open Full Job Board</a>
+                    </div>
+                    <form method="get" class="row g-2">
+                        <div class="col-md-4">
+                            {{ student_filter_form.q }}
+                        </div>
+                        <div class="col-md-2">
+                            {{ student_filter_form.location }}
+                        </div>
+                        <div class="col-md-2">
+                            {{ student_filter_form.job_type }}
+                        </div>
+                        <div class="col-md-2">
+                            {{ student_filter_form.skills }}
+                        </div>
+                        <div class="col-md-2 d-flex gap-2">
+                            <button type="submit" class="btn btn-primary w-100">Search</button>
+                            <a href="{% url 'dashboard:student' %}" class="btn btn-outline-secondary">Reset</a>
+                        </div>
+                    </form>
+                </div>
+
+                <div class="panel-card mt-4">
+                    {% if student_filter_active %}
+                    <h2 class="h5 mb-3">Filtered Opportunities</h2>
+                    {% else %}
+                    <h2 class="h5 mb-3">Latest Opportunities</h2>
+                    {% endif %}
+
+                    {% if dashboard_jobs %}
+                    <div class="row g-3">
+                        {% for job in dashboard_jobs %}
+                        <div class="col-md-6">
+                            <div class="border rounded-3 p-3 h-100">
+                                <div class="d-flex justify-content-between align-items-start gap-2">
+                                    <div>
+                                        <h3 class="h6 mb-1">{{ job.title }}</h3>
+                                        <p class="small text-muted mb-1">{{ job.company_name }}</p>
+                                        <p class="small text-muted mb-2">{{ job.location|default:'Location not specified' }}</p>
+                                    </div>
+                                    <span class="badge text-bg-primary">{{ job.get_job_type_display }}</span>
+                                </div>
+
+                                <div class="d-flex flex-wrap gap-2 mt-3">
+                                    <a href="{% url 'jobs:detail' job.id %}" class="btn btn-sm btn-outline-primary">View</a>
+
+                                    <form method="post" action="{% url 'jobs:toggle_bookmark' job.id %}" class="d-inline">
+                                        {% csrf_token %}
+                                        <input type="hidden" name="next" value="{{ request.get_full_path }}">
+                                        {% if job.id in bookmarked_job_ids %}
+                                        <button type="submit" class="btn btn-sm btn-outline-danger">Remove Bookmark</button>
+                                        {% else %}
+                                        <button type="submit" class="btn btn-sm btn-outline-success">Save Job</button>
+                                        {% endif %}
+                                    </form>
+
+                                    {% if job.id in applied_job_ids %}
+                                    <button class="btn btn-sm btn-secondary" disabled>Already Applied</button>
+                                    {% else %}
+                                    <form method="post" action="{% url 'jobs:apply' job.id %}" class="d-inline">
+                                        {% csrf_token %}
+                                        <button type="submit" class="btn btn-sm btn-primary">Apply Now</button>
+                                    </form>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    <p class="text-muted mb-0">No jobs found for selected filters.</p>
+                    {% endif %}
+                </div>
+
+                <div class="panel-card mt-4">
+                    <h2 class="h5 mb-3">Application Status Breakdown</h2>
+                    <div class="row g-3">
+                        {% for item in applications_by_status %}
+                        <div class="col-md-3 col-6">
+                            <div class="border rounded-3 p-3 text-center">
+                                <p class="small text-muted mb-1">{{ item.label }}</p>
+                                <p class="h5 mb-0">{{ item.count }}</p>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+
+                <div class="panel-card mt-4">
+                    <h2 class="h5 mb-3">Recommended Jobs For You</h2>
+                    {% if suggested_jobs %}
+                    <div class="row g-3">
+                        {% for item in suggested_jobs %}
+                        <div class="col-md-6">
+                            <div class="border rounded-3 p-3 h-100">
+                                <div class="d-flex justify-content-between align-items-start gap-2 mb-2">
+                                    <div>
+                                        <h3 class="h6 mb-1">{{ item.job.title }}</h3>
+                                        <p class="small text-muted mb-0">{{ item.job.company_name }}{% if item.job.location %} | {{ item.job.location }}{% endif %}</p>
+                                    </div>
+                                    <span class="badge text-bg-success">{{ item.score }}% Match</span>
+                                </div>
+                                <p class="small text-muted mb-3">{{ item.explanation }}</p>
+
+                                <div class="d-flex flex-wrap gap-2">
+                                    <a href="{% url 'jobs:detail' item.job.id %}" class="btn btn-sm btn-outline-primary">View Job</a>
+
+                                    <form method="post" action="{% url 'jobs:toggle_bookmark' item.job.id %}" class="d-inline">
+                                        {% csrf_token %}
+                                        <input type="hidden" name="next" value="{{ request.get_full_path }}">
+                                        {% if item.job.id in bookmarked_job_ids %}
+                                        <button type="submit" class="btn btn-sm btn-outline-danger">Remove Bookmark</button>
+                                        {% else %}
+                                        <button type="submit" class="btn btn-sm btn-outline-success">Save Job</button>
+                                        {% endif %}
+                                    </form>
+
+                                    {% if item.job.id in applied_job_ids %}
+                                    <button class="btn btn-sm btn-secondary" disabled>Already Applied</button>
+                                    {% else %}
+                                    <form method="post" action="{% url 'jobs:apply' item.job.id %}" class="d-inline">
+                                        {% csrf_token %}
+                                        <button type="submit" class="btn btn-sm btn-primary">Apply Now</button>
+                                    </form>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    <p class="text-muted mb-0">Complete your profile to get better job recommendations.</p>
+                    {% endif %}
+                </div>
+
+                <div class="panel-card mt-4">
+                    <h2 class="h5 mb-3">Recent Applications</h2>
+                    {% if recent_applications %}
+                    <div class="table-responsive">
+                        <table class="table align-middle mb-0">
+                            <thead>
+                                <tr>
+                                    <th>Job</th>
+                                    <th>Company</th>
+                                    <th>Status</th>
+                                    <th>Updated</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for application in recent_applications %}
+                                <tr>
+                                    <td>{{ application.job.title }}</td>
+                                    <td>{{ application.job.company_name }}</td>
+                                    <td>
+                                        {% if application.status == 'selected' %}
+                                        <span class="badge text-bg-success">{{ application.get_status_display }}</span>
+                                        {% elif application.status == 'shortlisted' %}
+                                        <span class="badge text-bg-info">{{ application.get_status_display }}</span>
+                                        {% elif application.status == 'rejected' %}
+                                        <span class="badge text-bg-danger">{{ application.get_status_display }}</span>
+                                        {% else %}
+                                        <span class="badge text-bg-secondary">{{ application.get_status_display }}</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>{{ application.updated_at|date:'d M Y' }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <p class="text-muted mb-0">No applications yet. Start browsing jobs and apply.</p>
+                    {% endif %}
+                </div>
+            </div>
+
+            <div class="col-lg-4">
+                <div class="panel-card">
+                    <h2 class="h5 mb-3">Status</h2>
+                    <p class="text-muted mb-2">Role: <strong>Student</strong></p>
+                    <p class="text-muted mb-2">Available jobs: <strong>{{ available_jobs_count }}</strong></p>
+                    <p class="text-muted mb-2">Unread notifications: <strong>{{ unread_notifications_count }}</strong></p>
+                    <p class="text-muted mb-2">Email: {{ request.user.email }}</p>
+                    <p class="text-muted mb-0">Account created: {{ request.user.date_joined|date:'d M Y' }}</p>
+                </div>
+
+                <div class="panel-card mt-4">
+                    <h2 class="h5 mb-3">Profile Checklist</h2>
+                    {% for item in profile_checklist %}
+                    <p class="mb-2 d-flex justify-content-between align-items-center">
+                        <span>{{ item.label }}</span>
+                        {% if item.completed %}
+                        <span class="badge text-bg-success">Done</span>
+                        {% else %}
+                        <span class="badge text-bg-warning">Pending</span>
+                        {% endif %}
+                    </p>
+                    {% endfor %}
+
+                    {% if active_resume_obj and active_resume_obj.file %}
+                    <p class="small text-muted mb-0 mt-3">
+                        Active resume uploaded on {{ active_resume_obj.uploaded_at|date:'d M Y' }}.
+                    </p>
+                    {% else %}
+                    <p class="small text-muted mb-0 mt-3">No active resume found.</p>
+                    {% endif %}
+                </div>
+
+                <div class="panel-card mt-4">
+                    <h2 class="h5 mb-3">Recent Notifications</h2>
+                    {% if recent_notifications %}
+                    <div class="d-grid gap-2">
+                        {% for item in recent_notifications %}
+                        <div class="border rounded-3 p-2">
+                            <p class="mb-1 fw-semibold small">{{ item.title }}</p>
+                            <p class="mb-1 text-muted small">{{ item.message|truncatechars:95 }}</p>
+                            <p class="mb-0 text-muted small">{{ item.created_at|date:'d M Y, h:i A' }}</p>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    <a href="{% url 'notifications:center' %}" class="btn btn-sm btn-outline-primary mt-3">Open Notifications</a>
+                    {% else %}
+                    <p class="text-muted mb-0">No recent notifications.</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}

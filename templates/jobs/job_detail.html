@@ -1,0 +1,90 @@
+{% extends 'base.html' %}
+
+{% block title %}Job Detail | Alumni Job Portal{% endblock %}
+
+{% block content %}
+<section class="py-5">
+    <div class="container">
+        <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-4">
+            <h1 class="h4 fw-bold mb-0">{{ job.title }}</h1>
+            <div class="d-flex flex-wrap gap-2">
+                {% if can_manage_job %}
+                <a href="{% url 'jobs:edit' job.id %}" class="btn btn-outline-primary">Edit Job</a>
+                <form method="post" action="{% url 'jobs:delete' job.id %}" class="d-inline">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-outline-danger">Deactivate Job</button>
+                </form>
+                {% endif %}
+                <a href="{% url 'jobs:list' %}" class="btn btn-outline-secondary">Back to Jobs</a>
+            </div>
+        </div>
+
+        <div class="card border-0 shadow-sm">
+            <div class="card-body p-4">
+                <div class="d-flex flex-wrap justify-content-between align-items-start gap-2 mb-3">
+                    <div>
+                        <h2 class="h5 mb-1">{{ job.company_name }}</h2>
+                        <p class="mb-0 text-muted">{{ job.location|default:'Location not specified' }}</p>
+                    </div>
+                    <span class="badge text-bg-primary">{{ job.get_job_type_display }}</span>
+                </div>
+
+                {% if can_manage_job %}
+                <p class="mb-2">
+                    <strong>Approval Status:</strong>
+                    {% if job.approval_status == 'approved' %}
+                    <span class="badge text-bg-success">Approved</span>
+                    {% elif job.approval_status == 'rejected' %}
+                    <span class="badge text-bg-danger">Rejected</span>
+                    {% else %}
+                    <span class="badge text-bg-warning">Pending</span>
+                    {% endif %}
+                </p>
+                {% endif %}
+
+                {% if job.required_skills %}
+                <p><strong>Required Skills:</strong> {{ job.required_skills }}</p>
+                {% endif %}
+
+                <p class="mb-0 text-muted">{{ job.description }}</p>
+            </div>
+        </div>
+
+        {% if can_apply %}
+        <div class="card border-0 shadow-sm mt-4">
+            <div class="card-body p-4">
+                <h3 class="h6 fw-bold mb-3">Application</h3>
+
+                {% if can_bookmark %}
+                <form method="post" action="{% url 'jobs:toggle_bookmark' job.id %}" class="mb-3">
+                    {% csrf_token %}
+                    <input type="hidden" name="next" value="{{ request.get_full_path }}">
+                    {% if is_bookmarked %}
+                    <button type="submit" class="btn btn-sm btn-outline-danger">Remove Bookmark</button>
+                    {% else %}
+                    <button type="submit" class="btn btn-sm btn-outline-success">Save Job</button>
+                    {% endif %}
+                </form>
+                {% endif %}
+
+                {% if already_applied %}
+                <div class="alert alert-success mb-0">You already applied for this job.</div>
+                {% elif not has_active_resume %}
+                <div class="alert alert-warning mb-3">Upload an active resume first to apply for this job.</div>
+                <a href="{% url 'profiles:resume_upload' %}" class="btn btn-outline-primary">Upload Resume</a>
+                {% else %}
+                <form method="post" action="{% url 'jobs:apply' job.id %}">
+                    {% csrf_token %}
+                    <div class="mb-3">
+                        <label for="cover_letter" class="form-label fw-semibold">Cover Letter (Optional)</label>
+                        <textarea id="cover_letter" name="cover_letter" rows="4" class="form-control" placeholder="Write a short message for this application..."></textarea>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Submit Application</button>
+                </form>
+                {% endif %}
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</section>
+{% endblock %}

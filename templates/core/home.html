@@ -1,0 +1,139 @@
+{% extends 'base.html' %}
+
+{% block title %}Home | Online Job Portal{% endblock %}
+
+{% load static %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/home.css' %}">
+{% endblock %}
+
+{% block content %}
+<section class="home-hero">
+    <div class="container py-5">
+        <div class="row align-items-center g-4">
+            <div class="col-lg-7">
+                <span class="hero-badge">University Project Portal</span>
+                <h1 class="hero-title mt-3">Online Job Portal for Alumni Network</h1>
+                <p class="hero-subtitle mt-3">
+                    Connect students, alumni, and employers on one platform for internships,
+                    full-time opportunities, and professional networking.
+                </p>
+                <div class="d-flex gap-3 flex-wrap mt-4">
+                    <a href="/job_portal/accounts/register/" class="btn btn-primary btn-lg px-4">Register</a>
+                    <a href="/job_portal/accounts/login/" class="btn btn-outline-primary btn-lg px-4">Login</a>
+                </div>
+                <div class="hero-tags mt-4">
+                    <span>Students</span>
+                    <span>Alumni</span>
+                    <span>Employers</span>
+                    <span>Admin Oversight</span>
+                </div>
+            </div>
+            <div class="col-lg-5">
+                <div class="hero-panel">
+                    <h3 class="h5 mb-3">What this portal provides</h3>
+                    <ul class="hero-list mb-0">
+                        <li>Role-based access and secure login</li>
+                        <li>Profile and resume management</li>
+                        <li>Job posting and smart application tracking</li>
+                        <li>Search, matching, and bookmarking</li>
+                        <li>Notifications and admin reporting</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="py-5">
+    <div class="container">
+        <div class="section-heading text-center mb-4">
+            <h2 class="h3 fw-bold">Core Features</h2>
+            <p class="text-muted mb-0">Simple, practical modules based on your project requirements.</p>
+        </div>
+        <div class="row g-4">
+            <div class="col-md-6 col-lg-4">
+                <div class="feature-card h-100">
+                    <h3 class="h5">Authentication and Roles</h3>
+                    <p>Secure login and registration for Student, Alumni, Employer, and Admin users.</p>
+                </div>
+            </div>
+            <div class="col-md-6 col-lg-4">
+                <div class="feature-card h-100">
+                    <h3 class="h5">Profiles and Resume</h3>
+                    <p>Build professional profiles with education, skills, experience, and PDF resume uploads.</p>
+                </div>
+            </div>
+            <div class="col-md-6 col-lg-4">
+                <div class="feature-card h-100">
+                    <h3 class="h5">Jobs and Applications</h3>
+                    <p>Post jobs, apply quickly, and track application status from one dashboard.</p>
+                </div>
+            </div>
+            <div class="col-md-6 col-lg-4">
+                <div class="feature-card h-100">
+                    <h3 class="h5">Search and Matching</h3>
+                    <p>Use filters by location, type, and skill, then get simple skill-based job suggestions.</p>
+                </div>
+            </div>
+            <div class="col-md-6 col-lg-4">
+                <div class="feature-card h-100">
+                    <h3 class="h5">Notifications</h3>
+                    <p>Receive in-app and email alerts for jobs, status updates, and important actions.</p>
+                </div>
+            </div>
+            <div class="col-md-6 col-lg-4">
+                <div class="feature-card h-100">
+                    <h3 class="h5">Admin and Reports</h3>
+                    <p>Approve users and job posts, monitor activity, and export reports in CSV or PDF.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="py-5 section-soft">
+    <div class="container">
+        <div class="section-heading text-center mb-4">
+            <h2 class="h3 fw-bold">How It Works</h2>
+        </div>
+        <div class="row g-3 text-center">
+            <div class="col-md-4">
+                <div class="step-card h-100">
+                    <div class="step-number">1</div>
+                    <h3 class="h6 mt-3">Create Account</h3>
+                    <p class="mb-0">Register as Student, Alumni, or Employer with role-based access.</p>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="step-card h-100">
+                    <div class="step-number">2</div>
+                    <h3 class="h6 mt-3">Build Profile</h3>
+                    <p class="mb-0">Complete your profile and upload resume to improve matching quality.</p>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="step-card h-100">
+                    <div class="step-number">3</div>
+                    <h3 class="h6 mt-3">Connect and Apply</h3>
+                    <p class="mb-0">Browse opportunities, apply, and track your progress clearly.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="py-5">
+    <div class="container">
+        <div class="cta-box text-center">
+            <h2 class="h3 fw-bold mb-2">Ready to get started?</h2>
+            <p class="text-muted mb-4">Join the alumni network and discover new opportunities today.</p>
+            <div class="d-flex justify-content-center gap-3 flex-wrap">
+                <a href="/job_portal/accounts/register/" class="btn btn-primary btn-lg px-4">Create Account</a>
+                <a href="/job_portal/accounts/login/" class="btn btn-outline-primary btn-lg px-4">Sign In</a>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}

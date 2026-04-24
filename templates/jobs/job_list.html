@@ -1,0 +1,128 @@
+{% extends 'base.html' %}
+
+{% block title %}Jobs | Alumni Job Portal{% endblock %}
+
+{% block content %}
+<section class="py-5">
+    <div class="container">
+        <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-4">
+            <div>
+                <h1 class="h4 fw-bold mb-1">Browse Jobs</h1>
+                <p class="text-muted mb-0">Search jobs by title, company, location, or skill.</p>
+            </div>
+            <div class="d-flex flex-wrap gap-2">
+                {% if can_manage_jobs %}
+                <a href="{% url 'jobs:create' %}" class="btn btn-primary">Post New Job</a>
+                <a href="{% url 'jobs:manage' %}" class="btn btn-outline-primary">Manage Jobs</a>
+                {% endif %}
+                {% if role == 'student' or role == 'alumni' %}
+                <a href="{% url 'jobs:bookmarks' %}" class="btn btn-outline-primary">Saved Jobs</a>
+                {% endif %}
+                <a href="{% url 'dashboard:home' %}" class="btn btn-outline-secondary">Back to Dashboard</a>
+            </div>
+        </div>
+
+        <form method="get" class="row g-2 mb-4">
+            <div class="col-md-4">
+                {{ filter_form.q }}
+            </div>
+            <div class="col-md-2">
+                {{ filter_form.location }}
+            </div>
+            <div class="col-md-2">
+                {{ filter_form.job_type }}
+            </div>
+            <div class="col-md-2">
+                {{ filter_form.skills }}
+            </div>
+            <div class="col-md-2 d-flex gap-2">
+                <button type="submit" class="btn btn-primary w-100">Search</button>
+                <a href="{% url 'jobs:list' %}" class="btn btn-outline-secondary">Reset</a>
+            </div>
+        </form>
+
+        {% if role == 'student' or role == 'alumni' %}
+        {% if suggested_jobs %}
+        <div class="card border-0 shadow-sm mb-4">
+            <div class="card-body">
+                <h2 class="h5 mb-3">Suggested Jobs For You</h2>
+                <div class="row g-3">
+                    {% for item in suggested_jobs %}
+                    <div class="col-md-6">
+                        <div class="p-3 border rounded-3 h-100">
+                            <div class="d-flex justify-content-between align-items-start gap-2">
+                                <div>
+                                    <h3 class="h6 mb-1">{{ item.job.title }}</h3>
+                                    <p class="mb-2 text-muted small">{{ item.job.company_name }}</p>
+                                </div>
+                                <span class="badge text-bg-success">Match {{ item.score }}%</span>
+                            </div>
+                            <p class="small text-muted mb-3">{{ item.explanation }}</p>
+                            <a href="{% url 'jobs:detail' item.job.id %}" class="btn btn-sm btn-outline-primary">View Job</a>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+        {% endif %}
+        {% endif %}
+
+        {% if jobs %}
+        <div class="row g-3">
+            {% for job in jobs %}
+            <div class="col-12">
+                <div class="card border-0 shadow-sm">
+                    <div class="card-body">
+                        <div class="d-flex flex-wrap justify-content-between align-items-start gap-2">
+                            <div>
+                                <h2 class="h5 mb-1">{{ job.title }}</h2>
+                                <p class="mb-1 text-muted">{{ job.company_name }}</p>
+                                <p class="mb-2 text-muted">{{ job.location|default:'Location not specified' }}</p>
+                            </div>
+                            <span class="badge text-bg-primary">{{ job.get_job_type_display }}</span>
+                        </div>
+                        {% if job.required_skills %}
+                        <p class="mb-2"><strong>Skills:</strong> {{ job.required_skills }}</p>
+                        {% endif %}
+                        <p class="text-muted">{{ job.description|truncatechars:220 }}</p>
+
+                        <div class="d-flex flex-wrap gap-2 mt-3">
+                            <a href="{% url 'jobs:detail' job.id %}" class="btn btn-sm btn-outline-primary">View Details</a>
+
+                            {% if role == 'student' or role == 'alumni' %}
+                                <form method="post" action="{% url 'jobs:toggle_bookmark' job.id %}" class="d-inline">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="next" value="{{ request.get_full_path }}">
+                                    {% if job.id in bookmarked_job_ids %}
+                                    <button type="submit" class="btn btn-sm btn-outline-danger">Remove Bookmark</button>
+                                    {% else %}
+                                    <button type="submit" class="btn btn-sm btn-outline-success">Save Job</button>
+                                    {% endif %}
+                                </form>
+
+                                {% if job.id in applied_job_ids %}
+                                <button class="btn btn-sm btn-secondary" disabled>Already Applied</button>
+                                {% else %}
+                                <form method="post" action="{% url 'jobs:apply' job.id %}" class="d-inline">
+                                    {% csrf_token %}
+                                    <button type="submit" class="btn btn-sm btn-primary">Apply Now</button>
+                                </form>
+                                {% endif %}
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="card border-0 shadow-sm">
+            <div class="card-body p-4">
+                <p class="mb-0 text-muted">No jobs found yet. Jobs posted by alumni/employers will appear here.</p>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</section>
+{% endblock %}

@@ -1,0 +1,93 @@
+{% extends 'base.html' %}
+
+{% block title %}Saved Jobs | Alumni Job Portal{% endblock %}
+
+{% block content %}
+<section class="py-5">
+    <div class="container">
+        <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-4">
+            <div>
+                <h1 class="h4 fw-bold mb-1">Saved Jobs</h1>
+                <p class="text-muted mb-0">Review and apply to the jobs you bookmarked.</p>
+            </div>
+            <a href="{% url 'dashboard:home' %}" class="btn btn-outline-secondary">Back to Dashboard</a>
+        </div>
+
+        {% if bookmarks %}
+        <div class="row g-3">
+            {% for bookmark in bookmarks %}
+            <div class="col-12">
+                <div class="card border-0 shadow-sm">
+                    <div class="card-body">
+                        <div class="d-flex flex-wrap justify-content-between align-items-start gap-2">
+                            <div>
+                                <h2 class="h5 mb-1">{{ bookmark.job.title }}</h2>
+                                <p class="mb-1 text-muted">{{ bookmark.job.company_name }}</p>
+                                <p class="mb-2 text-muted">{{ bookmark.job.location|default:'Location not specified' }}</p>
+                            </div>
+                            <span class="badge text-bg-primary">{{ bookmark.job.get_job_type_display }}</span>
+                        </div>
+
+                        <div class="d-flex flex-wrap gap-2 mt-3">
+                            <a href="{% url 'jobs:detail' bookmark.job.id %}" class="btn btn-sm btn-outline-primary">View Job</a>
+
+                            <form method="post" action="{% url 'jobs:toggle_bookmark' bookmark.job.id %}" class="d-inline">
+                                {% csrf_token %}
+                                <input type="hidden" name="next" value="{% url 'jobs:bookmarks' %}">
+                                <button type="submit" class="btn btn-sm btn-outline-danger">Remove Bookmark</button>
+                            </form>
+
+                            {% if bookmark.job.id in applied_job_ids %}
+                            <button class="btn btn-sm btn-secondary" disabled>Already Applied</button>
+                            {% else %}
+                            <form method="post" action="{% url 'jobs:apply' bookmark.job.id %}" class="d-inline">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-sm btn-primary">Apply Now</button>
+                            </form>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+
+        {% if page_obj.has_other_pages %}
+        <nav aria-label="Saved jobs pagination" class="mt-3">
+            <ul class="pagination mb-0">
+                {% if page_obj.has_previous %}
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ page_obj.previous_page_number }}">Previous</a>
+                </li>
+                {% else %}
+                <li class="page-item disabled"><span class="page-link">Previous</span></li>
+                {% endif %}
+
+                {% for page_number in page_obj.paginator.page_range %}
+                {% if page_number == page_obj.number %}
+                <li class="page-item active" aria-current="page"><span class="page-link">{{ page_number }}</span></li>
+                {% elif page_number >= page_obj.number|add:'-2' and page_number <= page_obj.number|add:'2' %}
+                <li class="page-item"><a class="page-link" href="?page={{ page_number }}">{{ page_number }}</a></li>
+                {% endif %}
+                {% endfor %}
+
+                {% if page_obj.has_next %}
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ page_obj.next_page_number }}">Next</a>
+                </li>
+                {% else %}
+                <li class="page-item disabled"><span class="page-link">Next</span></li>
+                {% endif %}
+            </ul>
+        </nav>
+        {% endif %}
+        {% else %}
+        <div class="card border-0 shadow-sm">
+            <div class="card-body p-4">
+                <p class="mb-0 text-muted">No saved jobs yet. Bookmark jobs from the job list.</p>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</section>
+{% endblock %}

@@ -1,0 +1,104 @@
+{% extends 'base.html' %}
+
+{% block title %}Database Backups | Alumni Job Portal{% endblock %}
+
+{% block content %}
+<section class="py-5">
+    <div class="container">
+        <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-4">
+            <div>
+                <h1 class="h4 fw-bold mb-1">Database Backups</h1>
+                <p class="text-muted mb-0">Create and download MySQL backups for local recovery.</p>
+            </div>
+            <div class="d-flex flex-wrap gap-2">
+                <a href="{% url 'reports:home' %}" class="btn btn-outline-secondary">Back to Reports</a>
+                <a href="{% url 'dashboard:admin_panel' %}" class="btn btn-outline-secondary">Back to Admin Panel</a>
+            </div>
+        </div>
+
+        <div class="card border-0 shadow-sm mb-4">
+            <div class="card-body d-flex flex-wrap justify-content-between align-items-center gap-3">
+                <div>
+                    <h2 class="h6 mb-1">Create Backup</h2>
+                    <p class="text-muted mb-0">
+                        {% if retention_count > 0 %}
+                        Retention policy keeps latest {{ retention_count }} backup(s).
+                        {% else %}
+                        Retention policy is disabled.
+                        {% endif %}
+                    </p>
+                </div>
+                <form method="post" class="m-0">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-primary">Create Backup</button>
+                </form>
+            </div>
+        </div>
+
+        <div class="card border-0 shadow-sm">
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-striped align-middle mb-0">
+                        <thead>
+                            <tr>
+                                <th>Filename</th>
+                                <th>Size (bytes)</th>
+                                <th>Created At</th>
+                                <th>Created By</th>
+                                <th>Download</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for item in page_obj.object_list %}
+                            <tr>
+                                <td>{{ item.filename }}</td>
+                                <td>{{ item.file_size_bytes }}</td>
+                                <td>{{ item.created_at|date:'d M Y, h:i A' }}</td>
+                                <td>{{ item.created_by.username|default:'System' }}</td>
+                                <td>
+                                    <a href="{% url 'reports:download_backup' item.id %}" class="btn btn-sm btn-outline-primary">Download</a>
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="5" class="text-center text-muted py-4">No backup records found.</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        {% if page_obj.has_other_pages %}
+        <nav aria-label="Backup pagination" class="mt-3">
+            <ul class="pagination mb-0">
+                {% if page_obj.has_previous %}
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ page_obj.previous_page_number }}">Previous</a>
+                </li>
+                {% else %}
+                <li class="page-item disabled"><span class="page-link">Previous</span></li>
+                {% endif %}
+
+                {% for page_number in page_obj.paginator.page_range %}
+                {% if page_number == page_obj.number %}
+                <li class="page-item active" aria-current="page"><span class="page-link">{{ page_number }}</span></li>
+                {% elif page_number >= page_obj.number|add:'-2' and page_number <= page_obj.number|add:'2' %}
+                <li class="page-item"><a class="page-link" href="?page={{ page_number }}">{{ page_number }}</a></li>
+                {% endif %}
+                {% endfor %}
+
+                {% if page_obj.has_next %}
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ page_obj.next_page_number }}">Next</a>
+                </li>
+                {% else %}
+                <li class="page-item disabled"><span class="page-link">Next</span></li>
+                {% endif %}
+            </ul>
+        </nav>
+        {% endif %}
+    </div>
+</section>
+{% endblock %}

@@ -1,0 +1,78 @@
+{% extends 'base.html' %}
+
+{% block title %}Manage Applications | Alumni Job Portal{% endblock %}
+
+{% block content %}
+<section class="py-5">
+    <div class="container">
+        <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-4">
+            <div>
+                <h1 class="h4 fw-bold mb-1">Manage Applications</h1>
+                <p class="text-muted mb-0">Review candidates and update application statuses.</p>
+            </div>
+            <div class="d-flex gap-2">
+                <a href="{% url 'messaging:list' %}" class="btn btn-outline-primary">My Conversations</a>
+                <a href="{% url 'dashboard:home' %}" class="btn btn-outline-secondary">Back to Dashboard</a>
+            </div>
+        </div>
+
+        {% if applications %}
+        <div class="table-responsive">
+            <table class="table table-striped align-middle">
+                <thead>
+                    <tr>
+                        <th>Job</th>
+                        <th>Applicant</th>
+                        <th>Email</th>
+                        <th>Resume</th>
+                        <th>Current Status</th>
+                        <th>Update</th>
+                        <th>Conversation</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for application in applications %}
+                    <tr>
+                        <td>{{ application.job.title }}</td>
+                        <td>{{ application.applicant.get_full_name|default:application.applicant.username }}</td>
+                        <td>{{ application.applicant.email }}</td>
+                        <td>
+                            {% if application.resume_document and application.resume_document.file %}
+                            <a href="{{ application.resume_document.file.url }}" target="_blank" rel="noopener">View Resume</a>
+                            {% else %}
+                            <span class="text-muted">Not available</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <span class="badge text-bg-secondary">{{ application.get_status_display }}</span>
+                        </td>
+                        <td>
+                            <form method="post" class="d-flex gap-2">
+                                {% csrf_token %}
+                                <input type="hidden" name="application_id" value="{{ application.id }}">
+                                <select name="status" class="form-select form-select-sm" style="min-width: 150px;">
+                                    {% for value, label in status_choices %}
+                                    <option value="{{ value }}" {% if application.status == value %}selected{% endif %}>{{ label }}</option>
+                                    {% endfor %}
+                                </select>
+                                <button type="submit" class="btn btn-sm btn-primary">Save</button>
+                            </form>
+                        </td>
+                        <td>
+                            <a href="{% url 'messaging:open_for_application' application.id %}" class="btn btn-sm btn-outline-primary">Open Chat</a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="card border-0 shadow-sm">
+            <div class="card-body p-4">
+                <p class="mb-0 text-muted">No applications available yet for your posted jobs.</p>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</section>
+{% endblock %}

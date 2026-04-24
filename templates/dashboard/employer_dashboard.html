@@ -1,0 +1,36 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Employer Dashboard | Alumni Job Portal{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/dashboard.css' %}">
+{% endblock %}
+
+{% block content %}
+<section class="dashboard-page py-5">
+    <div class="container">
+        <div class="dashboard-header mb-4">
+            <h1 class="h3 fw-bold mb-2">Employer Dashboard</h1>
+            <p class="mb-0 text-muted">Create listings and manage candidate applications efficiently.</p>
+        </div>
+
+        <div class="panel-card">
+            <h2 class="h5 mb-3">Quick Actions</h2>
+            <div class="d-flex flex-wrap gap-2 mb-3">
+                <a href="{% url 'jobs:create' %}" class="btn btn-primary btn-sm">Post New Job</a>
+                <a href="{% url 'jobs:manage' %}" class="btn btn-outline-primary btn-sm">Manage Jobs</a>
+                <a href="{% url 'jobs:list' %}" class="btn btn-outline-primary btn-sm">Browse Jobs</a>
+                <a href="{% url 'applications:manage_applications' %}" class="btn btn-outline-primary btn-sm">Manage Applicants</a>
+                <a href="{% url 'notifications:center' %}" class="btn btn-outline-primary btn-sm">Notifications</a>
+                <a href="{% url 'reports:feedback' %}" class="btn btn-outline-primary btn-sm">Report Issue</a>
+            </div>
+            <ul class="mb-0 text-muted">
+                <li>Create and manage job postings</li>
+                <li>Review applications and shortlist candidates</li>
+                <li>Track hiring status updates</li>
+            </ul>
+        </div>
+    </div>
+</section>
+{% endblock %}

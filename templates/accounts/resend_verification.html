@@ -1,0 +1,56 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Resend Verification | Alumni Job Portal{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/accounts.css' %}">
+{% endblock %}
+
+{% block content %}
+<section class="auth-page py-5">
+    <div class="container">
+        <div class="row justify-content-center align-items-stretch g-4">
+            <div class="col-lg-5">
+                <div class="auth-info h-100">
+                    <h1 class="h3 fw-bold">Verify your email</h1>
+                    <p class="mt-3 mb-4">
+                        If you did not receive your verification email,
+                        request a new one here.
+                    </p>
+                    <ul class="auth-points mb-0">
+                        <li>Use the same email you used during registration</li>
+                        <li>Open the verification link from your inbox</li>
+                        <li>After verification, wait for admin approval</li>
+                    </ul>
+                </div>
+            </div>
+            <div class="col-lg-7">
+                <div class="auth-card">
+                    <h2 class="h4 fw-semibold mb-3">Resend Verification Email</h2>
+                    <form method="post" novalidate>
+                        {% csrf_token %}
+
+                        {% if form.non_field_errors %}
+                        <div class="alert alert-danger">{{ form.non_field_errors }}</div>
+                        {% endif %}
+
+                        <div class="mb-3">
+                            <label class="form-label" for="{{ form.email.id_for_label }}">Registered Email</label>
+                            {{ form.email }}
+                            <div class="form-error">{{ form.email.errors }}</div>
+                        </div>
+
+                        <button type="submit" class="btn btn-primary w-100 py-2">Send Verification Link</button>
+                    </form>
+
+                    <p class="mt-3 mb-0 text-muted text-center">
+                        Back to
+                        <a href="{% url 'accounts:login' %}">Login</a>
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}

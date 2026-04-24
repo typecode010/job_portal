@@ -1,0 +1,89 @@
+{% extends 'base.html' %}
+
+{% block title %}Conversation | Alumni Job Portal{% endblock %}
+
+{% block content %}
+<section class="py-5">
+    <div class="container">
+        <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-4">
+            <div>
+                <h1 class="h4 fw-bold mb-1">Conversation</h1>
+                <p class="text-muted mb-0">Job: {{ thread.application.job.title }} | Company: {{ thread.application.job.company_name }}</p>
+            </div>
+            <div class="d-flex gap-2">
+                <a href="{% url 'messaging:list' %}" class="btn btn-outline-primary">My Conversations</a>
+                <a href="{% url 'dashboard:home' %}" class="btn btn-outline-secondary">Dashboard</a>
+            </div>
+        </div>
+
+        <div class="card border-0 shadow-sm mb-4">
+            <div class="card-body">
+                <p class="mb-1"><strong>Applicant:</strong> {{ thread.application.applicant.get_full_name|default:thread.application.applicant.username }}</p>
+                <p class="mb-1">
+                    <strong>Job Owner:</strong>
+                    {% if thread.application.job.posted_by %}
+                    {{ thread.application.job.posted_by.get_full_name|default:thread.application.job.posted_by.username }}
+                    {% else %}
+                    <span class="text-muted">Unavailable</span>
+                    {% endif %}
+                </p>
+                <p class="mb-0"><strong>Application Status:</strong> {{ thread.application.get_status_display }}</p>
+            </div>
+        </div>
+
+        <div class="card border-0 shadow-sm mb-4">
+            <div class="card-body">
+                {% if conversation_messages %}
+                <div class="d-grid gap-3">
+                    {% for item in conversation_messages %}
+                    <div class="p-3 rounded-3 {% if item.sender_id == request.user.id %}bg-primary text-white{% else %}bg-light{% endif %}">
+                        <div class="d-flex justify-content-between align-items-start gap-3 mb-1">
+                            <strong>{{ item.sender.get_full_name|default:item.sender.username }}</strong>
+                            <span class="small {% if item.sender_id == request.user.id %}text-white-50{% else %}text-muted{% endif %}">{{ item.created_at|date:'d M Y, h:i A' }}</span>
+                        </div>
+                        <p class="mb-0">{{ item.body|linebreaksbr }}</p>
+                        {% if item.sender_id == request.user.id %}
+                        <p class="small mb-0 mt-2 {% if item.is_read %}text-white-50{% else %}text-white-50{% endif %}">{% if item.is_read %}Read{% else %}Sent{% endif %}</p>
+                        {% endif %}
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <p class="mb-0 text-muted">No messages yet. Start the conversation below.</p>
+                {% endif %}
+            </div>
+        </div>
+
+        <div class="card border-0 shadow-sm">
+            <div class="card-body">
+                {% if can_send %}
+                <h2 class="h6 mb-3">Send Message</h2>
+                <form method="post" novalidate>
+                    {% csrf_token %}
+                    {% if form.non_field_errors %}
+                    <div class="alert alert-danger py-2">
+                        {% for error in form.non_field_errors %}
+                        <div>{{ error }}</div>
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+                    <div class="mb-3">
+                        {{ form.body }}
+                        {% for error in form.body.errors %}
+                        <div class="text-danger small mt-1">{{ error }}</div>
+                        {% endfor %}
+                    </div>
+                    <button type="submit" class="btn btn-primary">Send</button>
+                </form>
+                {% else %}
+                {% if is_admin_read_only %}
+                <p class="mb-0 text-muted">Admin read-only mode: sending messages is disabled.</p>
+                {% else %}
+                <p class="mb-0 text-muted">Only conversation participants can send messages.</p>
+                {% endif %}
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}

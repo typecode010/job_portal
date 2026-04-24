@@ -1,0 +1,129 @@
+{% extends 'base.html' %}
+
+{% block title %}Feedback | Alumni Job Portal{% endblock %}
+
+{% block content %}
+<section class="py-5">
+    <div class="container">
+        <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-4">
+            <div>
+                <h1 class="h4 fw-bold mb-1">Feedback and Issue Reporting</h1>
+                <p class="text-muted mb-0">Submit suggestions or report issues for admin review.</p>
+            </div>
+            {% if request.user.is_staff or request.user.is_superuser %}
+            <a href="{% url 'reports:feedback_manage' %}" class="btn btn-outline-primary">Manage Feedback</a>
+            {% endif %}
+        </div>
+
+        <div class="card border-0 shadow-sm mb-4">
+            <div class="card-body">
+                <h2 class="h6 mb-3">Submit New Feedback</h2>
+                <form method="post" novalidate>
+                    {% csrf_token %}
+                    {% if feedback_form.non_field_errors %}
+                    <div class="alert alert-danger py-2">
+                        {% for error in feedback_form.non_field_errors %}
+                        <div>{{ error }}</div>
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold" for="{{ feedback_form.subject.id_for_label }}">Subject</label>
+                        {{ feedback_form.subject }}
+                        {% for error in feedback_form.subject.errors %}
+                        <div class="text-danger small mt-1">{{ error }}</div>
+                        {% endfor %}
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold" for="{{ feedback_form.message.id_for_label }}">Message</label>
+                        {{ feedback_form.message }}
+                        {% for error in feedback_form.message.errors %}
+                        <div class="text-danger small mt-1">{{ error }}</div>
+                        {% endfor %}
+                    </div>
+
+                    <button type="submit" class="btn btn-primary">Submit Ticket</button>
+                </form>
+            </div>
+        </div>
+
+        <div class="card border-0 shadow-sm">
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-striped align-middle mb-0">
+                        <thead>
+                            <tr>
+                                <th>Subject</th>
+                                <th>Status</th>
+                                <th>Created</th>
+                                <th>Updated</th>
+                                <th>Admin Notes</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for ticket in page_obj.object_list %}
+                            <tr>
+                                <td>
+                                    <p class="mb-1 fw-semibold">{{ ticket.subject }}</p>
+                                    <p class="mb-0 small text-muted">{{ ticket.message|truncatechars:110 }}</p>
+                                </td>
+                                <td>
+                                    {% if ticket.status == 'open' %}
+                                    <span class="badge text-bg-warning">{{ ticket.get_status_display }}</span>
+                                    {% elif ticket.status == 'in_progress' %}
+                                    <span class="badge text-bg-info">{{ ticket.get_status_display }}</span>
+                                    {% elif ticket.status == 'resolved' %}
+                                    <span class="badge text-bg-success">{{ ticket.get_status_display }}</span>
+                                    {% else %}
+                                    <span class="badge text-bg-secondary">{{ ticket.get_status_display }}</span>
+                                    {% endif %}
+                                </td>
+                                <td>{{ ticket.created_at|date:'d M Y, h:i A' }}</td>
+                                <td>{{ ticket.updated_at|date:'d M Y, h:i A' }}</td>
+                                <td>{{ ticket.admin_notes|default:'-'|linebreaksbr }}</td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="5" class="text-center text-muted py-4">No feedback tickets submitted yet.</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        {% if page_obj.has_other_pages %}
+        <nav aria-label="Feedback pagination" class="mt-3">
+            <ul class="pagination mb-0">
+                {% if page_obj.has_previous %}
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ page_obj.previous_page_number }}">Previous</a>
+                </li>
+                {% else %}
+                <li class="page-item disabled"><span class="page-link">Previous</span></li>
+                {% endif %}
+
+                {% for page_number in page_obj.paginator.page_range %}
+                {% if page_number == page_obj.number %}
+                <li class="page-item active" aria-current="page"><span class="page-link">{{ page_number }}</span></li>
+                {% elif page_number >= page_obj.number|add:'-2' and page_number <= page_obj.number|add:'2' %}
+                <li class="page-item"><a class="page-link" href="?page={{ page_number }}">{{ page_number }}</a></li>
+                {% endif %}
+                {% endfor %}
+
+                {% if page_obj.has_next %}
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ page_obj.next_page_number }}">Next</a>
+                </li>
+                {% else %}
+                <li class="page-item disabled"><span class="page-link">Next</span></li>
+                {% endif %}
+            </ul>
+        </nav>
+        {% endif %}
+    </div>
+</section>
+{% endblock %}

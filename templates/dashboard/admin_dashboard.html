@@ -1,0 +1,143 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Admin Dashboard | Alumni Job Portal{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/dashboard.css' %}">
+{% endblock %}
+
+{% block content %}
+<section class="dashboard-page py-5">
+    <div class="container">
+        <div class="dashboard-header mb-4">
+            <h1 class="h3 fw-bold mb-2">Admin Dashboard</h1>
+            <p class="mb-0 text-muted">Moderation controls and summary metrics for the platform.</p>
+        </div>
+
+        <div class="row g-4 mb-4">
+            <div class="col-md-3">
+                <div class="metric-card">
+                    <h2 class="h6 mb-2">Total Users</h2>
+                    <p class="metric-value">{{ total_users }}</p>
+                    <small class="text-muted">All registered accounts</small>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="metric-card">
+                    <h2 class="h6 mb-2">Total Job Posts</h2>
+                    <p class="metric-value">{{ total_job_posts }}</p>
+                    <small class="text-muted">Including pending/rejected</small>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="metric-card">
+                    <h2 class="h6 mb-2">Total Applications</h2>
+                    <p class="metric-value">{{ total_applications }}</p>
+                    <small class="text-muted">Applications across all jobs</small>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="metric-card">
+                    <h2 class="h6 mb-2">Active Users</h2>
+                    <p class="metric-value">{{ active_users }}</p>
+                    <small class="text-muted">Non-admin active accounts</small>
+                </div>
+            </div>
+        </div>
+
+        <div class="row g-4 mb-4">
+            <div class="col-lg-8">
+                <div class="panel-card h-100">
+                    <h2 class="h5 mb-3">Application Status Breakdown</h2>
+                    <div class="row g-3">
+                        {% for item in applications_by_status %}
+                        <div class="col-md-3 col-6">
+                            <div class="border rounded-3 p-3 text-center">
+                                <p class="small text-muted mb-1">{{ item.label }}</p>
+                                <p class="h5 mb-0">{{ item.count }}</p>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-4">
+                <div class="panel-card h-100">
+                    <h2 class="h5 mb-3">Moderation Queue</h2>
+                    <p class="mb-2 text-muted">Pending jobs: <strong>{{ pending_jobs }}</strong></p>
+                    <p class="mb-2 text-muted">Pending user approvals: <strong>{{ pending_user_approvals }}</strong></p>
+                    <p class="mb-3 text-muted">Inactive users: <strong>{{ inactive_users }}</strong></p>
+                    <div class="d-grid gap-2">
+                        <a href="{% url 'dashboard:moderation_jobs' %}" class="btn btn-primary">Moderate Jobs</a>
+                        <a href="{% url 'dashboard:moderation_users' %}" class="btn btn-outline-primary">Moderate Users</a>
+                        <a href="{% url 'reports:feedback_manage' %}" class="btn btn-outline-primary">Review Feedback</a>
+                        <a href="{% url 'reports:backups' %}" class="btn btn-outline-primary">Database Backups</a>
+                        <a href="{% url 'reports:home' %}" class="btn btn-outline-secondary">Open Reports</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row g-4 mb-4">
+            <div class="col-lg-4">
+                <div class="panel-card h-100">
+                    <h2 class="h5 mb-3">User Account Moderation</h2>
+                    <p class="mb-2 d-flex justify-content-between"><span>Approved</span><strong>{{ approved_users }}</strong></p>
+                    <p class="mb-2 d-flex justify-content-between"><span>Pending</span><strong>{{ pending_user_approvals }}</strong></p>
+                    <p class="mb-2 d-flex justify-content-between"><span>Rejected</span><strong>{{ rejected_users }}</strong></p>
+                    <p class="mb-0 d-flex justify-content-between"><span>Inactive</span><strong>{{ inactive_users }}</strong></p>
+                </div>
+            </div>
+            <div class="col-lg-4">
+                <div class="panel-card h-100">
+                    <h2 class="h5 mb-3">Users by Role</h2>
+                    {% for item in role_breakdown %}
+                    <p class="mb-2 d-flex justify-content-between"><span>{{ item.label }}</span><strong>{{ item.count }}</strong></p>
+                    {% empty %}
+                    <p class="text-muted mb-0">No role data available.</p>
+                    {% endfor %}
+                </div>
+            </div>
+            <div class="col-lg-4">
+                <div class="panel-card h-100">
+                    <h2 class="h5 mb-3">Top Hiring Companies</h2>
+                    {% for item in top_companies %}
+                    <p class="mb-2 d-flex justify-content-between"><span>{{ item.company_name|default:'N/A' }}</span><strong>{{ item.count }}</strong></p>
+                    {% empty %}
+                    <p class="text-muted mb-0">No company statistics available.</p>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+
+        <div class="panel-card">
+            <h2 class="h5 mb-3">Monthly Jobs and Applications Trend</h2>
+            <div class="table-responsive">
+                <table class="table align-middle mb-0">
+                    <thead>
+                        <tr>
+                            <th>Month</th>
+                            <th>Job Posts</th>
+                            <th>Applications</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for row in monthly_trends %}
+                        <tr>
+                            <td>{{ row.label }}</td>
+                            <td>{{ row.jobs_count }}</td>
+                            <td>{{ row.applications_count }}</td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="3" class="text-muted">No monthly trend data available.</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}

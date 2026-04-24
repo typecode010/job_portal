@@ -1,0 +1,337 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Alumni Dashboard | Alumni Job Portal{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/dashboard.css' %}">
+{% endblock %}
+
+{% block content %}
+<section class="dashboard-page py-5">
+    <div class="container">
+        <div class="dashboard-header mb-4">
+            <h1 class="h3 fw-bold mb-2">Alumni Dashboard</h1>
+            <p class="mb-0 text-muted">Welcome, {{ request.user.first_name|default:request.user.username }}. Manage postings, applicants, and your own opportunities from one place.</p>
+        </div>
+
+        <div class="row g-4 mb-4">
+            <div class="col-md-6 col-lg-2">
+                <div class="metric-card">
+                    <h2 class="h6 mb-2">Posted Jobs</h2>
+                    <p class="metric-value">{{ total_posted_jobs }}</p>
+                    <small class="text-muted">Total by you</small>
+                </div>
+            </div>
+            <div class="col-md-6 col-lg-2">
+                <div class="metric-card">
+                    <h2 class="h6 mb-2">Applicants</h2>
+                    <p class="metric-value">{{ received_applications_count }}</p>
+                    <small class="text-muted">Across your jobs</small>
+                </div>
+            </div>
+            <div class="col-md-6 col-lg-2">
+                <div class="metric-card">
+                    <h2 class="h6 mb-2">Pending Jobs</h2>
+                    <p class="metric-value">{{ pending_posted_jobs }}</p>
+                    <small class="text-muted">Awaiting moderation</small>
+                </div>
+            </div>
+            <div class="col-md-6 col-lg-2">
+                <div class="metric-card">
+                    <h2 class="h6 mb-2">My Applications</h2>
+                    <p class="metric-value">{{ my_applications_count }}</p>
+                    <small class="text-muted">Jobs you applied to</small>
+                </div>
+            </div>
+            <div class="col-md-6 col-lg-2">
+                <div class="metric-card">
+                    <h2 class="h6 mb-2">Shortlisted</h2>
+                    <p class="metric-value">{{ my_shortlisted_count }}</p>
+                    <small class="text-muted">Your own applications</small>
+                </div>
+            </div>
+            <div class="col-md-6 col-lg-2">
+                <div class="metric-card">
+                    <h2 class="h6 mb-2">Unread Alerts</h2>
+                    <p class="metric-value">{{ unread_notifications_count }}</p>
+                    <small class="text-muted">Recent notifications</small>
+                </div>
+            </div>
+        </div>
+
+        <div class="row g-4">
+            <div class="col-lg-8">
+                <div class="panel-card">
+                    <h2 class="h5 mb-3">Quick Actions</h2>
+                    <div class="d-flex flex-wrap gap-2">
+                        <a href="{% url 'jobs:create' %}" class="btn btn-primary">Post New Job</a>
+                        <a href="{% url 'jobs:manage' %}" class="btn btn-outline-primary">Manage Jobs</a>
+                        <a href="{% url 'applications:manage_applications' %}" class="btn btn-outline-primary">Manage Applicants</a>
+                        <a href="{% url 'applications:my_applications' %}" class="btn btn-outline-primary">My Applications</a>
+                        <a href="{% url 'jobs:list' %}" class="btn btn-outline-primary">Browse Market Jobs</a>
+                        <a href="{% url 'messaging:list' %}" class="btn btn-outline-primary">My Conversations</a>
+                        <a href="{% url 'notifications:center' %}" class="btn btn-outline-primary">Notifications</a>
+                        <a href="{% url 'reports:feedback' %}" class="btn btn-outline-primary">Report Issue</a>
+                    </div>
+                </div>
+
+                <div class="panel-card mt-4">
+                    <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+                        <h2 class="h5 mb-0">My Posted Jobs</h2>
+                        <div class="d-flex flex-wrap gap-2 dashboard-filter-chips">
+                            <button type="button" class="btn btn-sm btn-outline-secondary js-posted-filter active" data-filter="all">All</button>
+                            <button type="button" class="btn btn-sm btn-outline-secondary js-posted-filter" data-filter="approved">Approved</button>
+                            <button type="button" class="btn btn-sm btn-outline-secondary js-posted-filter" data-filter="pending">Pending</button>
+                            <button type="button" class="btn btn-sm btn-outline-secondary js-posted-filter" data-filter="rejected">Rejected</button>
+                        </div>
+                    </div>
+
+                    {% if posted_jobs %}
+                    <div class="row g-3" id="postedJobsGrid">
+                        {% for job in posted_jobs %}
+                        <div class="col-md-6 posted-job-card" data-status="{{ job.approval_status }}">
+                            <div class="alumni-job-card border rounded-3 p-3 h-100">
+                                <div class="d-flex justify-content-between align-items-start gap-2 mb-2">
+                                    <div>
+                                        <h3 class="h6 mb-1">{{ job.title }}</h3>
+                                        <p class="small text-muted mb-0">{{ job.company_name }}{% if job.location %} | {{ job.location }}{% endif %}</p>
+                                    </div>
+                                    <span class="badge text-bg-primary">{{ job.get_job_type_display }}</span>
+                                </div>
+
+                                <div class="d-flex flex-wrap gap-2 mb-2">
+                                    {% if job.approval_status == 'approved' and job.is_active %}
+                                    <span class="badge text-bg-success">Approved</span>
+                                    {% elif job.approval_status == 'pending' %}
+                                    <span class="badge text-bg-warning">Pending</span>
+                                    {% elif job.approval_status == 'rejected' %}
+                                    <span class="badge text-bg-danger">Rejected</span>
+                                    {% else %}
+                                    <span class="badge text-bg-secondary">{{ job.get_approval_status_display }}</span>
+                                    {% endif %}
+                                    <span class="badge text-bg-light">{{ job.applications_total }} applicant(s)</span>
+                                </div>
+
+                                <div class="d-flex flex-wrap gap-2 mt-3">
+                                    <a href="{% url 'jobs:detail' job.id %}" class="btn btn-sm btn-outline-primary">View</a>
+                                    <a href="{% url 'jobs:edit' job.id %}" class="btn btn-sm btn-outline-secondary">Edit</a>
+                                    <a href="{% url 'applications:manage_applications' %}" class="btn btn-sm btn-outline-success">Manage Applicants</a>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    <p id="postedJobsEmpty" class="text-muted mt-3 mb-0 d-none">No jobs found for selected status filter.</p>
+                    {% else %}
+                    <p class="text-muted mb-0">You have not posted any jobs yet. Start by creating your first job listing.</p>
+                    {% endif %}
+                </div>
+
+                <div class="panel-card mt-4">
+                    <h2 class="h5 mb-3">Latest Applicants on Your Jobs</h2>
+                    {% if recent_received_applications %}
+                    <div class="table-responsive">
+                        <table class="table align-middle mb-0">
+                            <thead>
+                                <tr>
+                                    <th>Job</th>
+                                    <th>Applicant</th>
+                                    <th>Status</th>
+                                    <th>Updated</th>
+                                    <th>Conversation</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for application in recent_received_applications %}
+                                <tr>
+                                    <td>{{ application.job.title }}</td>
+                                    <td>{{ application.applicant.get_full_name|default:application.applicant.username }}</td>
+                                    <td>
+                                        {% if application.status == 'selected' %}
+                                        <span class="badge text-bg-success">{{ application.get_status_display }}</span>
+                                        {% elif application.status == 'shortlisted' %}
+                                        <span class="badge text-bg-info">{{ application.get_status_display }}</span>
+                                        {% elif application.status == 'rejected' %}
+                                        <span class="badge text-bg-danger">{{ application.get_status_display }}</span>
+                                        {% else %}
+                                        <span class="badge text-bg-secondary">{{ application.get_status_display }}</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>{{ application.updated_at|date:'d M Y, h:i A' }}</td>
+                                    <td>
+                                        <a href="{% url 'messaging:open_for_application' application.id %}" class="btn btn-sm btn-outline-primary">Open Chat</a>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <p class="text-muted mb-0">No applicant activity yet on your posted jobs.</p>
+                    {% endif %}
+                </div>
+
+                <div class="panel-card mt-4">
+                    <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+                        {% if alumni_filter_active %}
+                        <h2 class="h5 mb-0">Filtered Market Opportunities</h2>
+                        {% else %}
+                        <h2 class="h5 mb-0">Market Opportunities</h2>
+                        {% endif %}
+                        <a href="{% url 'jobs:list' %}" class="btn btn-sm btn-outline-secondary">Open Full Job Board</a>
+                    </div>
+
+                    <form method="get" class="row g-2 mb-3">
+                        <div class="col-md-4">{{ alumni_filter_form.q }}</div>
+                        <div class="col-md-2">{{ alumni_filter_form.location }}</div>
+                        <div class="col-md-2">{{ alumni_filter_form.job_type }}</div>
+                        <div class="col-md-2">{{ alumni_filter_form.skills }}</div>
+                        <div class="col-md-2 d-flex gap-2">
+                            <button type="submit" class="btn btn-primary w-100">Search</button>
+                            <a href="{% url 'dashboard:alumni' %}" class="btn btn-outline-secondary">Reset</a>
+                        </div>
+                    </form>
+
+                    {% if opportunities %}
+                    <div class="row g-3">
+                        {% for job in opportunities %}
+                        <div class="col-md-6">
+                            <div class="alumni-job-card border rounded-3 p-3 h-100">
+                                <div class="d-flex justify-content-between align-items-start gap-2">
+                                    <div>
+                                        <h3 class="h6 mb-1">{{ job.title }}</h3>
+                                        <p class="small text-muted mb-1">{{ job.company_name }}</p>
+                                        <p class="small text-muted mb-2">{{ job.location|default:'Location not specified' }}</p>
+                                    </div>
+                                    <span class="badge text-bg-primary">{{ job.get_job_type_display }}</span>
+                                </div>
+
+                                <div class="d-flex flex-wrap gap-2 mt-3">
+                                    <a href="{% url 'jobs:detail' job.id %}" class="btn btn-sm btn-outline-primary">View</a>
+
+                                    <form method="post" action="{% url 'jobs:toggle_bookmark' job.id %}" class="d-inline">
+                                        {% csrf_token %}
+                                        <input type="hidden" name="next" value="{{ request.get_full_path }}">
+                                        {% if job.id in bookmarked_job_ids %}
+                                        <button type="submit" class="btn btn-sm btn-outline-danger">Remove Bookmark</button>
+                                        {% else %}
+                                        <button type="submit" class="btn btn-sm btn-outline-success">Save Job</button>
+                                        {% endif %}
+                                    </form>
+
+                                    {% if job.id in applied_job_ids %}
+                                    <button class="btn btn-sm btn-secondary" disabled>Already Applied</button>
+                                    {% else %}
+                                    <form method="post" action="{% url 'jobs:apply' job.id %}" class="d-inline">
+                                        {% csrf_token %}
+                                        <button type="submit" class="btn btn-sm btn-primary">Apply</button>
+                                    </form>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    <p class="text-muted mb-0">No opportunities found for current filters.</p>
+                    {% endif %}
+                </div>
+            </div>
+
+            <div class="col-lg-4">
+                <div class="panel-card">
+                    <h2 class="h5 mb-3">Alumni Snapshot</h2>
+                    <p class="mb-2 d-flex justify-content-between"><span>Approved jobs</span><strong>{{ approved_posted_jobs }}</strong></p>
+                    <p class="mb-2 d-flex justify-content-between"><span>Pending jobs</span><strong>{{ pending_posted_jobs }}</strong></p>
+                    <p class="mb-2 d-flex justify-content-between"><span>Rejected jobs</span><strong>{{ rejected_posted_jobs }}</strong></p>
+                    <p class="mb-2 d-flex justify-content-between"><span>My selected applications</span><strong>{{ my_selected_count }}</strong></p>
+                    <p class="mb-0 d-flex justify-content-between"><span>Email</span><strong>{{ request.user.email }}</strong></p>
+                </div>
+
+                <div class="panel-card mt-4">
+                    <h2 class="h5 mb-3">Recommended for You</h2>
+                    {% if suggested_jobs %}
+                    <div class="d-grid gap-2">
+                        {% for item in suggested_jobs %}
+                        <div class="border rounded-3 p-2">
+                            <div class="d-flex justify-content-between align-items-start gap-2">
+                                <div>
+                                    <p class="mb-1 fw-semibold small">{{ item.job.title }}</p>
+                                    <p class="mb-1 text-muted small">{{ item.job.company_name }}</p>
+                                </div>
+                                <span class="badge text-bg-success">{{ item.score }}%</span>
+                            </div>
+                            <p class="mb-2 text-muted small">{{ item.explanation }}</p>
+                            <a href="{% url 'jobs:detail' item.job.id %}" class="btn btn-sm btn-outline-primary">View Job</a>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    <p class="text-muted mb-0">Complete your profile and activity to improve recommendations.</p>
+                    {% endif %}
+                </div>
+
+                <div class="panel-card mt-4">
+                    <h2 class="h5 mb-3">Recent Notifications</h2>
+                    {% if recent_notifications %}
+                    <div class="d-grid gap-2">
+                        {% for item in recent_notifications %}
+                        <div class="border rounded-3 p-2">
+                            <p class="mb-1 fw-semibold small">{{ item.title }}</p>
+                            <p class="mb-1 text-muted small">{{ item.message|truncatechars:95 }}</p>
+                            <p class="mb-0 text-muted small">{{ item.created_at|date:'d M Y, h:i A' }}</p>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    <a href="{% url 'notifications:center' %}" class="btn btn-sm btn-outline-primary mt-3">Open Notifications</a>
+                    {% else %}
+                    <p class="text-muted mb-0">No recent notifications.</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const filterButtons = document.querySelectorAll('.js-posted-filter');
+    const postedCards = document.querySelectorAll('.posted-job-card');
+    const emptyState = document.getElementById('postedJobsEmpty');
+
+    if (!filterButtons.length || !postedCards.length) {
+        return;
+    }
+
+    function applyPostedFilter(filterValue) {
+        let visibleCount = 0;
+
+        postedCards.forEach(function (card) {
+            const cardStatus = (card.dataset.status || '').toLowerCase();
+            const shouldShow = filterValue === 'all' || cardStatus === filterValue;
+            card.classList.toggle('d-none', !shouldShow);
+            if (shouldShow) {
+                visibleCount += 1;
+            }
+        });
+
+        if (emptyState) {
+            emptyState.classList.toggle('d-none', visibleCount !== 0);
+        }
+    }
+
+    filterButtons.forEach(function (button) {
+        button.addEventListener('click', function () {
+            filterButtons.forEach(function (item) {
+                item.classList.remove('active');
+            });
+            button.classList.add('active');
+            applyPostedFilter((button.dataset.filter || 'all').toLowerCase());
+        });
+    });
+
+    applyPostedFilter('all');
+});
+</script>
+{% endblock %}
