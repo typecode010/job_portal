@@ -1,3 +1,30 @@
+from django.contrib.auth.models import User
+from django.test import TestCase
+from django.urls import reverse
+
+
+class HomePageRoutingTests(TestCase):
+	def test_anonymous_user_sees_public_home_page(self):
+		response = self.client.get(reverse('home'))
+
+		self.assertEqual(response.status_code, 200)
+		self.assertContains(response, 'Register')
+		self.assertContains(response, 'Login')
+		self.assertNotContains(response, 'Logout')
+
+	def test_authenticated_user_is_redirected_to_dashboard(self):
+		user = User.objects.create_user(
+			username='home_redirect_user',
+			password='testpass123',
+			is_active=True,
+		)
+
+		self.client.force_login(user)
+
+		response = self.client.get(reverse('home'))
+
+		self.assertEqual(response.status_code, 302)
+		self.assertEqual(response.url, '/job_portal/dashboard/')
 import tempfile
 from pathlib import Path
 from subprocess import CompletedProcess
